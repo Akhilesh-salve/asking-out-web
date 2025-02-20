@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ask Me Out - Enhanced</title>
+  <style>
+    /* Global Styles */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    .page {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      display: none;
+    }
+    .page.active {
+      display: block;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .option {
+      background: #eee;
+      margin: 10px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+      display: inline-block;
+      width: 40%;
+    }
+    .option:hover {
+      background: #ddd;
+      transform: scale(1.05);
+    }
+    .option.selected {
+      border: 2px solid #007BFF;
+    }
+    /* Gallery styles */
+    .gallery {
+      margin: 20px 0;
+    }
+    .gallery img {
+      width: 150px;
+      height: 150px;
+      margin: 5px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border 0.3s, transform 0.3s;
+    }
+    .gallery img:hover {
+      transform: scale(1.05);
+    }
+    .gallery img.selected {
+      border: 2px solid #007BFF;
+    }
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    .fade-out {
+      animation: fadeOut 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    /* Countdown Timer */
+    #countdown {
+      font-size: 20px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Elements for Sound Effects -->
+  <audio id="clickSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+  <audio id="transitionSound" src="https://www.soundjay.com/button/sounds/button-09.mp3"></audio>
+
+  <!-- Page 1: Ask the Question -->
+  <div id="page1" class="page active fade-in">
+    <h1>Would you like to go out with me?</h1>
+    <button id="yesButton">Yes</button>
+    <button id="noButton">No</button>
+  </div>
+
+  <!-- Page 2: Date Options & Theme Selection -->
+  <div id="page2" class="page">
+    <h2>Choose your ideal date:</h2>
+    <div id="dateOptions">
+      <div class="option" data-option="Movie Date">Movie Date</div>
+      <div class="option" data-option="Dinner Date">Dinner Date</div>
+      <div class="option" data-option="Exploring New Place">Exploring New Place</div>
+      <div class="option" data-option="Picnic Date">Picnic Date</div>
+      <div class="option" data-option="Coffee Date">Coffee Date</div>
+      <div class="option" data-option="Adventure Date">Adventure Date</div>
+    </div>
+    <h2>Choose a theme for your date:</h2>
+    <div class="gallery">
+      <img src="https://via.placeholder.com/150?text=Romantic" alt="Romantic Theme" data-theme="Romantic">
+      <img src="https://via.placeholder.com/150?text=Casual" alt="Casual Theme" data-theme="Casual">
+      <img src="https://via.placeholder.com/150?text=Adventurous" alt="Adventurous Theme" data-theme="Adventurous">
+      <img src="https://via.placeholder.com/150?text=Elegant" alt="Elegant Theme" data-theme="Elegant">
+    </div>
+    <button id="nextFromPage2" disabled>Next</button>
+  </div>
+
+  <!-- Page 3: Details Form -->
+  <div id="page3" class="page">
+    <h2>Set the Details</h2>
+    <form id="detailsForm">
+      <div>
+        <label for="date">Choose Date:</label>
+        <input type="date" id="date" required>
+      </div>
+      <div>
+        <label for="time">Choose Time:</label>
+        <input type="time" id="time" required>
+      </div>
+      <div>
+        <label for="meeting">Meeting Place:</label>
+        <input type="text" id="meeting" placeholder="Enter a meeting place" required>
+      </div>
+      <button type="submit" id="confirmButton">Confirm</button>
+    </form>
+    <p id="formError" style="color:red;"></p>
+  </div>
+
+  <!-- Page 4: Final Confirmation & Countdown Timer -->
+  <div id="page4" class="page">
+    <h2>Your Date Details</h2>
+    <p id="summaryDetails"></p>
+    <div id="countdown"></div>
+    <button id="shareButton">Share on Social Media</button>
+  </div>
+
+  <script>
+    // Helper function for page transitions with fade effects and sound
+    function transitionToPage(currentPage, nextPage) {
+      const transitionSound = document.getElementById('transitionSound');
+      transitionSound.play();
+      currentPage.classList.add('fade-out');
+      setTimeout(() => {
+        currentPage.classList.remove('fade-out', 'active');
+        currentPage.style.display = 'none';
+        nextPage.style.display = 'block';
+        nextPage.classList.add('fade-in', 'active');
+        setTimeout(() => nextPage.classList.remove('fade-in'), 500);
+      }, 500);
+    }
+
+    // Global variables to store selections
+    let selectedDateOption = '';
+    let selectedTheme = '';
+
+    // Page references
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const page3 = document.getElementById('page3');
+    const page4 = document.getElementById('page4');
+
+    // Sound effect
+    const clickSound = document.getElementById('clickSound');
+
+    // Page 1 buttons
+    const yesButton = document.getElementById('yesButton');
+    const noButton = document.getElementById('noButton');
+    let yesScale = 1;
+
+    noButton.addEventListener('click', () => {
+      clickSound.play();
+      yesScale += 0.1;
+      yesButton.style.transform = `scale(${yesScale})`;
+    });
+
+    yesButton.addEventListener('click', () => {
+      clickSound.play();
+      transitionToPage(page1, page2);
+    });
+
+    // Page 2: Date Options
+    const dateOptions = document.querySelectorAll('#dateOptions .option');
+    dateOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        clickSound.play();
+        // Remove selected class from all
+        dateOptions.forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedDateOption = option.getAttribute('data-option');
+        checkPage2Ready();
+      });
+    });
+
+    // Page 2: Theme Gallery
+    const galleryImages = document.querySelectorAll('.gallery img');
+    galleryImages.forEach(img => {
+      img.addEventListener('click', () => {
+        clickSound.play();
+        galleryImages.forEach(image => image.classList.remove('selected'));
+        img.classList.add('selected');
+        selectedTheme = img.getAttribute('data-theme');
+        checkPage2Ready();
+      });
+    });
+
+    // Enable Next button when both options are selected
+    const nextFromPage2 = document.getElementById('nextFromPage2');
+    function checkPage2Ready() {
+      if (selectedDateOption && selectedTheme) {
+        nextFromPage2.disabled = false;
+      }
+    }
+
+    nextFromPage2.addEventListener('click', () => {
+      clickSound.play();
+      transitionToPage(page2, page3);
+    });
+
+    // Page 3: Details Form Validation and Submission
+    const detailsForm = document.getElementById('detailsForm');
+    const formError = document.getElementById('formError');
+
+    detailsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      clickSound.play();
+      formError.textContent = '';
+
+      const dateValue = document.getElementById('date').value;
+      const timeValue = document.getElementById('time').value;
+      const meetingValue = document.getElementById('meeting').value.trim();
+
+      if (!dateValue || !timeValue || !meetingValue) {
+        formError.textContent = 'Please fill in all the details.';
+        return;
+      }
+
+      // Validate that the selected date and time are in the future
+      const selectedDateTime = new Date(`${dateValue}T${timeValue}`);
+      const now = new Date();
+      if (selectedDateTime <= now) {
+        formError.textContent = 'Please choose a future date and time.';
+        return;
+      }
+
+      // Everything is valid; transition to Page 4 with summary and countdown timer.
+      transitionToPage(page3, page4);
+      displaySummary(selectedDateTime, meetingValue);
+      startCountdown(selectedDateTime);
+    });
+
+    // Page 4: Display Summary and Setup Countdown Timer
+    function displaySummary(selectedDateTime, meetingValue) {
+      const summary = document.getElementById('summaryDetails');
+      summary.innerHTML = `
+        <strong>Date Option:</strong> ${selectedDateOption} <br>
+        <strong>Theme:</strong> ${selectedTheme} <br>
+        <strong>Date:</strong> ${selectedDateTime.toLocaleDateString()} <br>
+        <strong>Time:</strong> ${selectedDateTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} <br>
+        <strong>Meeting Place:</strong> ${meetingValue}
+      `;
+    }
+
+    function startCountdown(targetDate) {
+      const countdownElem = document.getElementById('countdown');
+      const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate.getTime() - now;
+
+        if (distance < 0) {
+          clearInterval(interval);
+          countdownElem.textContent = "It's time!";
+          return;
+        }
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        countdownElem.textContent = `Countdown: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      }, 1000);
+    }
+
+    // Share Button for Social Media using the Web Share API
+    const shareButton = document.getElementById('shareButton');
+    shareButton.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({
+          title: 'My Date Invitation',
+          text: 'Check out my date invitation details!',
+          url: window.location.href
+        })
+        .then(() => console.log('Shared successfully'))
+        .catch((error) => console.error('Error sharing:', error));
+      } else {
+        alert('Web Share API is not supported in your browser.');
+      }
+    });
+  </script>
+</body>
+</html>
